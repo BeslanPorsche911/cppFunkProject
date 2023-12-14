@@ -3,3 +3,4 @@
 - calc (switch case) - калькулятор с switch case
 - GuessNum- угадай число
 - min and max array
+- sort
