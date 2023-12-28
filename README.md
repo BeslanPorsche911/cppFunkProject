@@ -4,3 +4,4 @@
 - GuessNum- угадай число
 - min and max array
 - sorts
+- практическая
