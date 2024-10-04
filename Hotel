@@ -1,0 +1,228 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <ctime>
+#include <iomanip>
+
+using namespace std;
+
+class Guest {
+public:
+    int id;
+    string name;
+    int age;
+    string phone;
+    int roomNumber;
+
+    Guest(int id, string name, int age, string phone, int roomNumber)
+        : id(id), name(name), age(age), phone(phone), roomNumber(roomNumber) {}
+};
+
+
+class Room {
+public:
+    int id;
+    int number;
+    string type;
+    string title;
+    int beds;
+    string status; 
+    double price;
+
+    Room(int id, int number, string type, string title, int beds, double price)
+        : id(id), number(number), type(type), title(title), beds(beds), status("свободна"), price(price) {}
+};
+
+
+class StandartRoom : public Room {
+public:
+    StandartRoom(int id, int number, string title, int beds, double price)
+        : Room(id, number, "Standard", title, beds, price) {}
+};
+
+class VIPRoom : public Room {
+public:
+    VIPRoom(int id, int number, string title, int beds, double price)
+        : Room(id, number, "VIP", title, beds, price) {}
+};
+
+class PremiumRoom : public Room {
+public:
+    PremiumRoom(int id, int number, string title, int beds, double price)
+        : Room(id, number, "Premium", title, beds, price) {}
+};
+
+class LuxRoom : public Room {
+public:
+    LuxRoom(int id, int number, string title, int beds, double price)
+        : Room(id, number, "Lux", title, beds, price) {}
+};
+
+
+class Bill {
+public:
+    int id;
+    int idGuest;
+    int idRoom;
+    time_t checkInDate;
+    time_t checkOutDate;
+    double amount;
+
+    Bill(int id, int idGuest, int idRoom, time_t checkInDate, time_t checkOutDate, double amount)
+        : id(id), idGuest(idGuest), idRoom(idRoom), checkInDate(checkInDate), checkOutDate(checkOutDate), amount(amount) {}
+};
+
+class HotelManagement {
+private:
+    vector<Guest> guests;
+    vector<Room*> rooms; 
+
+public:
+    ~HotelManagement() {
+        for (Room* room : rooms) {
+            delete room; 
+        }
+    }
+
+    void addGuest(int id, string name, int age, string phone) {
+        guests.emplace_back(id, name, age, phone, -1); 
+    }
+
+    void addRoom(int id, int number, string type, string title, int beds, double price) {
+        Room* room = nullptr;
+        if (type == "Standard") {
+            room = new StandartRoom(id, number, title, beds, price);
+        }
+        else if (type == "VIP") {
+            room = new VIPRoom(id, number, title, beds, price);
+        }
+        else if (type == "Premium") {
+            room = new PremiumRoom(id, number, title, beds, price);
+        }
+        else if (type == "Lux") {
+            room = new LuxRoom(id, number, title, beds, price);
+        }
+        if (room) {
+            rooms.push_back(room);
+        }
+    }
+
+    void checkIn(int guestId, int roomId) {
+        for (auto& guest : guests) {
+            if (guest.id == guestId) {
+                guest.roomNumber = roomId;
+                for (auto& room : rooms) {
+                    if (room->id == roomId) {
+                        room->status = "занята";
+                    }
+                }
+                cout << "Гость " << guest.name << "заселен в комнату " << roomId << ".\n";
+                return;
+            }
+        }
+        cout << "Гость с ID" << guestId << "не найден.\n";
+    }
+
+    void checkOut(int guestId) {
+        for (auto& guest : guests) {
+            if (guest.id == guestId) {
+                for (auto& room : rooms) {
+                    if (room->id == guest.roomNumber) {
+                        room->status = "свободна";
+                    }
+                }
+                guest.roomNumber = -1; 
+                cout << "Гость " << guest.name << "выселен.\n";
+                return;
+            }
+        }
+        cout << "Гость с ID " << guestId << " не найден.\n";
+    }
+};
+
+
+void saveData(const HotelManagement& hotel) {
+    ofstream oFile("HotelData.txt");
+
+    oFile << "Guests:\n";
+
+    oFile << "Rooms:\n";
+
+
+    oFile.close();
+}
+
+
+int main() {
+    setlocale(LC_ALL, "RUS");
+    HotelManagement hotel;
+    int choice;
+    cout << "Добро пожаловать в наш отель! Пожалуйста выберите следующие опции!: ";
+
+    while (true) {
+        cout << "Меню:\n";
+        cout << "1. Добавить нового гостя\n";
+        cout << "2. Добавить новую комнату\n";
+        cout << "3. Заселить в комнату\n";
+        cout << "4. Выселить\n";
+        cin >> choice;
+
+        switch (choice) {
+        case 1: {
+            int id, age;
+            string name, phone;
+            cout << "Введите ID гостя: ";
+            cin >> id;
+            cout << "Введите имя гостя: ";
+            cin >> name;
+            cout << "Введите возраст: ";
+            cin >> age;
+            cout << "Введите телефон: ";
+            cin >> phone;
+            hotel.addGuest(id, name, age, phone);
+            break;
+        }
+        case 2: {
+            int id, number, beds;
+            double price;
+            string type, title;
+            cout << "Введите ID комнаты: ";
+            cin >> id;
+            cout << "Введите номер комнаты: ";
+            cin >> number;
+            cout << "Введите тип комнаты (Standard, VIP, Premium, Lux): ";
+            cin >> type;
+            cout << "Введите описание комнаты: ";
+            cin >> title;
+            cout << "Введите количество мест: ";
+            cin >> beds;
+            cout << "Введите цену за сутки: ";
+            cin >> price;
+            hotel.addRoom(id, number, type, title, beds, price);
+            break;
+        }
+        case 3: {
+            int guestId, roomId;
+            cout << "Введите ID гостя: ";
+            cin >> guestId;
+            cout << "Введите ID комнаты: ";
+            cin >> roomId;
+            hotel.checkIn(guestId, roomId);
+            break;
+        }
+        case 4: {
+            int guestId;
+            cout << "Введите ID гостя: ";
+            cin >> guestId;
+            hotel.checkOut(guestId);
+            break;
+        }
+        default:
+            cout << "Неизвестно. Попробуйте снова.\n";
+            break;
+        }
+    }
+
+    return 0;
+}
